@@ -2,7 +2,12 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import { CameraIcon, ArrowUpTrayIcon } from "@heroicons/react/24/solid";
+import {
+  CameraIcon,
+  ArrowUpTrayIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/solid";
+import { useUser } from "@clerk/nextjs";
 
 export default function PlantIdentifier() {
   const [image, setImage] = useState(null);
@@ -12,6 +17,7 @@ export default function PlantIdentifier() {
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
   const [showCamera, setShowCamera] = useState(false);
+  const { isSignedIn, user } = useUser();
 
   useEffect(() => {
     if (showCamera) {
@@ -20,6 +26,10 @@ export default function PlantIdentifier() {
   }, [showCamera]);
 
   const handleImageUpload = (e) => {
+    if (!isSignedIn) {
+      alert("Please sign in to upload an image");
+      return;
+    }
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
@@ -32,6 +42,10 @@ export default function PlantIdentifier() {
   };
 
   const startCamera = async () => {
+    if (!isSignedIn) {
+      alert("Please sign in to use the camera");
+      return;
+    }
     try {
       console.log("Attempting to start camera...");
       const stream = await navigator.mediaDevices.getUserMedia({
@@ -49,6 +63,14 @@ export default function PlantIdentifier() {
       setError(`Unable to access camera: ${err.message}`);
       setShowCamera(false);
     }
+  };
+
+  const closeCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach((track) => track.stop());
+    }
+    setShowCamera(false);
   };
 
   const captureImage = () => {
@@ -114,8 +136,11 @@ export default function PlantIdentifier() {
       <div className="flex justify-center space-x-2 md:space-x-4 mb-4 md:mb-6">
         <button
           onClick={() => {
-            resetState();
-            fileInputRef.current.click();
+            if (isSignedIn) {
+              fileInputRef.current.click();
+            } else {
+              alert("Please sign in to upload an image");
+            }
           }}
           className="bg-green-600 text-white py-2 px-3 md:px-4 rounded-lg hover:bg-green-700 transition duration-300 flex items-center text-sm md:text-base"
         >
@@ -124,8 +149,11 @@ export default function PlantIdentifier() {
         </button>
         <button
           onClick={() => {
-            resetState();
-            setShowCamera(true);
+            if (isSignedIn) {
+              setShowCamera(true);
+            } else {
+              alert("Please sign in to use the camera");
+            }
           }}
           className="bg-blue-600 text-white py-2 px-3 md:px-4 rounded-lg hover:bg-blue-700 transition duration-300 flex items-center text-sm md:text-base"
         >
@@ -149,12 +177,21 @@ export default function PlantIdentifier() {
             playsInline
             className="w-full rounded-lg"
           />
-          <button
-            onClick={captureImage}
-            className="mt-2 md:mt-4 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 w-full text-sm md:text-base"
-          >
-            Capture Image
-          </button>
+          <div className="flex justify-between mt-2 md:mt-4">
+            <button
+              onClick={captureImage}
+              className="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 flex-1 mr-2 text-sm md:text-base"
+            >
+              Capture Image
+            </button>
+            <button
+              onClick={closeCamera}
+              className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition duration-300 flex-1 ml-2 text-sm md:text-base flex items-center justify-center"
+            >
+              <XCircleIcon className="h-4 w-4 md:h-5 md:w-5 mr-1 md:mr-2" />
+              Close Camera
+            </button>
+          </div>
         </div>
       )}
 

@@ -8,10 +8,10 @@ import {
 export default function Home() {
   return (
     <div className="max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6 text-center text-green-700">
+      <h1 className="text-3xl font-bold mb-6 text-center text-white">
         Welcome to Plant Identifier
       </h1>
-      <p className="mb-8 text-center">
+      <p className="mb-8 text-center text-white">
         Upload an image of a plant and our AI will identify it for you!
       </p>
       <PlantIdentifier />
